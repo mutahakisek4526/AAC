@@ -1,0 +1,31 @@
+<UserControl x:Class="AacV1.Views.SupporterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="支援者（環境制御定義編集）" FontSize="28" FontWeight="Bold" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10">
+            <TextBox Width="160" Margin="4" Text="{Binding ActionName}" />
+            <TextBox Width="140" Margin="4" Text="{Binding ActionType}" />
+            <TextBox Width="300" Margin="4" Text="{Binding ActionArgument}" />
+            <Button Content="追加" Command="{Binding AddActionCommand}" Margin="4" />
+        </StackPanel>
+        <ListBox Grid.Row="2" ItemsSource="{Binding Actions}" SelectedItem="{Binding SelectedAction}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding ActionType}" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Argument}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Grid.Row="3" Content="選択項目を削除" Command="{Binding RemoveActionCommand}" HorizontalAlignment="Left" Margin="4" />
+    </Grid>
+</UserControl>
