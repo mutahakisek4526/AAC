@@ -1,0 +1,32 @@
+<UserControl x:Class="AacV1.Views.PhraseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="フレーズ" FontSize="30" FontWeight="Bold" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10">
+            <TextBox Width="180" Margin="4" Text="{Binding NewPhraseName}" />
+            <TextBox Width="320" Margin="4" Text="{Binding NewPhraseText}" />
+            <Button Content="追加" Command="{Binding AddPhraseCommand}" Margin="4" />
+        </StackPanel>
+        <ListBox Grid.Row="2" ItemsSource="{Binding Phrases}" SelectedItem="{Binding SelectedPhrase}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding Text}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <Button Content="削除" Command="{Binding RemovePhraseCommand}" Margin="4" />
+            <Button Content="話す" Command="{Binding SpeakPhraseCommand}" Margin="4" />
+        </StackPanel>
+    </Grid>
+</UserControl>
