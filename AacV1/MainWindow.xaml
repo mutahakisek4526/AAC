@@ -1,0 +1,52 @@
+<Window x:Class="AacV1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:AacV1.Views"
+        xmlns:viewModels="clr-namespace:AacV1.ViewModels"
+        mc:Ignorable="d"
+        Title="AacV1" Height="720" Width="1280">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:KanaBoardViewModel}">
+            <views:KanaBoardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PhraseViewModel}">
+            <views:PhraseView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:HistoryViewModel}">
+            <views:HistoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:OperationsViewModel}">
+            <views:OperationsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:SupporterViewModel}">
+            <views:SupporterView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Left" Width="230" Background="#1F2A37" Padding="8">
+            <StackPanel>
+                <TextBlock Text="AacV1 メニュー" Foreground="White" FontSize="26" Margin="8" />
+                <Button Content="ホーム" Command="{Binding GoHomeCommand}" Margin="4" />
+                <Button Content="50音文字盤" Command="{Binding GoKanaBoardCommand}" Margin="4" />
+                <Button Content="フレーズ" Command="{Binding GoPhraseCommand}" Margin="4" />
+                <Button Content="履歴" Command="{Binding GoHistoryCommand}" Margin="4" />
+                <Button Content="操作" Command="{Binding GoOperationsCommand}" Margin="4" />
+                <Button Content="設定" Command="{Binding GoSettingsCommand}" Margin="4" />
+                <Button Content="支援者" Command="{Binding GoSupporterCommand}" Margin="4" />
+            </StackPanel>
+        </Border>
+
+        <Grid Background="#F5F5F5">
+            <ContentControl Content="{Binding CurrentViewModel}" Margin="16" />
+        </Grid>
+    </DockPanel>
+</Window>

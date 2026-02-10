@@ -1,0 +1,26 @@
+<UserControl x:Class="AacV1.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="設定" FontSize="30" FontWeight="Bold" Margin="0,0,0,10" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="フォントサイズ" Width="180" VerticalAlignment="Center" />
+            <TextBox Text="{Binding FontSize}" Width="120" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="ハイコントラスト" Width="180" VerticalAlignment="Center" />
+            <CheckBox IsChecked="{Binding HighContrast}" VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <TextBlock Text="スキャン速度(ms)" Width="180" VerticalAlignment="Center" />
+            <TextBox Text="{Binding ScanIntervalMilliseconds}" Width="120" Margin="0,0,8,0"/>
+            <Button Content="保存" Command="{Binding SaveCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
