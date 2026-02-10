@@ -1,12 +1,14 @@
+using System.Windows.Controls;
+
 namespace AacV1.Services;
 
 public interface IScanService
 {
-    bool IsAutoScanning { get; }
-    int CurrentGroupIndex { get; }
-    int CurrentElementIndex { get; }
-    void StartAutoScan(int intervalMilliseconds);
-    void StopAutoScan();
-    void MoveNextManual();
-    void ConfirmSelection();
+    bool IsRunning { get; }
+    int HighlightIndex { get; }
+    void ConfigureTargets(IReadOnlyList<Button> buttons);
+    void Start(int intervalMilliseconds, bool rowColumnMode);
+    void Stop();
+    void MoveNext();
+    void ActivateCurrent();
 }

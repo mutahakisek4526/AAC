@@ -6,33 +6,45 @@ namespace AacV1.Services;
 public class ComputerControlService : IComputerControlService
 {
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint numberOfInputs, AacNativeInput[] inputs, int sizeOfInputStructure);
+    private static extern uint SendInput(uint nInputs, AacNativeInput[] pInputs, int cbSize);
 
     public void SendKey(AacKeyCode keyCode)
     {
         try
         {
-            var virtualKey = keyCode switch
+            if (keyCode == AacKeyCode.AltTab)
             {
-                AacKeyCode.Enter => 0x0D,
-                AacKeyCode.Escape => 0x1B,
-                AacKeyCode.Space => 0x20,
-                AacKeyCode.Tab => 0x09,
-                AacKeyCode.Up => 0x26,
-                AacKeyCode.Down => 0x28,
-                AacKeyCode.Left => 0x25,
-                AacKeyCode.Right => 0x27,
-                _ => 0
+                SendChord(0x12, 0x09);
+                return;
+            }
+
+            if (keyCode == AacKeyCode.WinD)
+            {
+                SendChord(0x5B, 0x44);
+                return;
+            }
+
+            var vk = keyCode switch
+            {
+                AacKeyCode.Enter => (ushort)0x0D,
+                AacKeyCode.Escape => (ushort)0x1B,
+                AacKeyCode.Tab => (ushort)0x09,
+                AacKeyCode.Up => (ushort)0x26,
+                AacKeyCode.Down => (ushort)0x28,
+                AacKeyCode.Left => (ushort)0x25,
+                AacKeyCode.Right => (ushort)0x27,
+                AacKeyCode.VolumeUp => (ushort)0xAF,
+                AacKeyCode.VolumeDown => (ushort)0xAE,
+                AacKeyCode.Mute => (ushort)0xAD,
+                _ => (ushort)0
             };
 
-            if (virtualKey == 0)
+            if (vk == 0)
             {
                 return;
             }
 
-            var downInput = BuildKeyboardInput(virtualKey, 0);
-            var upInput = BuildKeyboardInput(virtualKey, 0x0002);
-            SendInput(2, new[] { downInput, upInput }, Marshal.SizeOf<AacNativeInput>());
+            SendSingleKey(vk);
         }
         catch
         {
@@ -48,18 +60,9 @@ public class ComputerControlService : IComputerControlService
                 Type = 0,
                 Data = new AacInputUnion
                 {
-                    MouseInput = new AacMouseInput
-                    {
-                        Dx = dx,
-                        Dy = dy,
-                        MouseData = 0,
-                        DwFlags = 0x0001,
-                        Time = 0,
-                        DwExtraInfo = IntPtr.Zero
-                    }
+                    MouseInput = new AacMouseInput { Dx = dx, Dy = dy, DwFlags = 0x0001 }
                 }
             };
-
             SendInput(1, new[] { input }, Marshal.SizeOf<AacNativeInput>());
         }
         catch
@@ -71,35 +74,40 @@ public class ComputerControlService : IComputerControlService
     {
         try
         {
-            uint downFlag = mouseButton == AacMouseButton.Right ? 0x0008u : 0x0002u;
-            uint upFlag = mouseButton == AacMouseButton.Right ? 0x0010u : 0x0004u;
-
-            var downInput = new AacNativeInput
+            var down = new AacNativeInput
             {
                 Type = 0,
-                Data = new AacInputUnion
-                {
-                    MouseInput = new AacMouseInput { DwFlags = downFlag }
-                }
+                Data = new AacInputUnion { MouseInput = new AacMouseInput { DwFlags = 0x0002 } }
             };
-
-            var upInput = new AacNativeInput
+            var up = new AacNativeInput
             {
                 Type = 0,
-                Data = new AacInputUnion
-                {
-                    MouseInput = new AacMouseInput { DwFlags = upFlag }
-                }
+                Data = new AacInputUnion { MouseInput = new AacMouseInput { DwFlags = 0x0004 } }
             };
-
-            SendInput(2, new[] { downInput, upInput }, Marshal.SizeOf<AacNativeInput>());
+            SendInput(2, new[] { down, up }, Marshal.SizeOf<AacNativeInput>());
         }
         catch
         {
         }
     }
 
-    private static AacNativeInput BuildKeyboardInput(ushort virtualKey, uint flags)
+    private void SendSingleKey(ushort vk)
+    {
+        var down = CreateKeyboard(vk, 0);
+        var up = CreateKeyboard(vk, 0x0002);
+        SendInput(2, new[] { down, up }, Marshal.SizeOf<AacNativeInput>());
+    }
+
+    private void SendChord(ushort modifierVk, ushort keyVk)
+    {
+        var modDown = CreateKeyboard(modifierVk, 0);
+        var keyDown = CreateKeyboard(keyVk, 0);
+        var keyUp = CreateKeyboard(keyVk, 0x0002);
+        var modUp = CreateKeyboard(modifierVk, 0x0002);
+        SendInput(4, new[] { modDown, keyDown, keyUp, modUp }, Marshal.SizeOf<AacNativeInput>());
+    }
+
+    private static AacNativeInput CreateKeyboard(ushort vk, uint flags)
     {
         return new AacNativeInput
         {
@@ -108,11 +116,9 @@ public class ComputerControlService : IComputerControlService
             {
                 KeyboardInput = new AacKeyboardInput
                 {
-                    WVk = virtualKey,
-                    WScan = 0,
-                    DwFlags = flags,
-                    Time = 0,
-                    DwExtraInfo = IntPtr.Zero
+                    WVk = vk,
+                    WScan = (ushort)0,
+                    DwFlags = flags
                 }
             }
         };

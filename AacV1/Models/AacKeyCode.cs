@@ -5,22 +5,18 @@ public enum AacKeyCode
     Enter,
     Escape,
     Tab,
-    Space,
     Up,
     Down,
     Left,
     Right,
-    F1,
-    F2,
-    F3,
-    F4,
-    A,
-    B,
-    C
+    VolumeUp,
+    VolumeDown,
+    Mute,
+    AltTab,
+    WinD
 }
 
 public enum AacMouseButton
 {
-    Left,
-    Right
+    Left
 }

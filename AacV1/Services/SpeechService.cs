@@ -4,11 +4,10 @@ namespace AacV1.Services;
 
 public class SpeechService : ISpeechService
 {
-    private readonly object _speechLock = new();
-    private SpeechSynthesizer? _speechSynthesizer;
+    private readonly SpeechSynthesizer _synthesizer = new();
+    private readonly object _lockObject = new();
 
     public bool IsSpeaking { get; private set; }
-
     public string LastError { get; private set; } = string.Empty;
 
     public async Task SpeakAsync(string text)
@@ -20,14 +19,13 @@ public class SpeechService : ISpeechService
 
         await Task.Run(() =>
         {
-            lock (_speechLock)
+            lock (_lockObject)
             {
                 try
                 {
                     LastError = string.Empty;
-                    _speechSynthesizer ??= new SpeechSynthesizer();
                     IsSpeaking = true;
-                    _speechSynthesizer.Speak(text);
+                    _synthesizer.Speak(text);
                 }
                 catch (Exception ex)
                 {
@@ -43,11 +41,11 @@ public class SpeechService : ISpeechService
 
     public void Stop()
     {
-        lock (_speechLock)
+        lock (_lockObject)
         {
             try
             {
-                _speechSynthesizer?.SpeakAsyncCancelAll();
+                _synthesizer.SpeakAsyncCancelAll();
             }
             catch (Exception ex)
             {

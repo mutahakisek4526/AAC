@@ -1,11 +1,12 @@
 using System.Text.RegularExpressions;
+using AacV1.Models;
 
 namespace AacV1.Services;
 
 public class PredictionService : IPredictionService
 {
     private readonly IStorageService _storageService;
-    private readonly Dictionary<string, List<string>> _dictionary;
+    private readonly AacPredictionDictionary _dictionary;
 
     public PredictionService(IStorageService storageService)
     {
@@ -13,34 +14,53 @@ public class PredictionService : IPredictionService
         _dictionary = _storageService.LoadPredictionDictionary();
     }
 
-    public List<string> GetPredictions(string sourceText)
+    public List<string> GetPredictions(string inputText, IReadOnlyCollection<AacHistoryItem> historyItems, IReadOnlyCollection<AacPhraseItem> phraseItems)
     {
-        var key = sourceText.Trim();
-        if (_dictionary.TryGetValue(key, out var candidates))
-        {
-            return candidates.Take(8).ToList();
-        }
+        var key = inputText.Trim();
+        var fromDictionary = _dictionary.WordFrequency
+            .Where(pair => pair.Key.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(pair => pair.Value)
+            .Select(pair => pair.Key);
 
-        return _dictionary.Keys
-            .Where(word => word.StartsWith(key, StringComparison.Ordinal))
-            .OrderBy(word => word)
+        var fromHistory = historyItems
+            .Where(item => item.Text.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.UseCount)
+            .ThenByDescending(item => item.CreatedAt)
+            .Select(item => item.Text);
+
+        var fromPhrases = phraseItems
+            .Where(item => item.Text.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.UseCount)
+            .Select(item => item.Text);
+
+        return fromDictionary
+            .Concat(fromHistory)
+            .Concat(fromPhrases)
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .Distinct()
             .Take(8)
             .ToList();
     }
 
-    public void LearnWord(string sourceText)
+    public void LearnFromText(string sourceText)
     {
-        var tokens = Regex.Split(sourceText, @"[\u3000\s,、。．.!！？?]+")
-            .Where(token => !string.IsNullOrWhiteSpace(token));
-
-        foreach (var token in tokens)
+        try
         {
-            if (!_dictionary.ContainsKey(token))
-            {
-                _dictionary[token] = new List<string>();
-            }
-        }
+            var words = Regex.Split(sourceText, @"[\u3000\s,、。．.!！？?]+")
+                .Where(word => !string.IsNullOrWhiteSpace(word));
 
-        _storageService.SavePredictionDictionary(_dictionary);
+            foreach (var word in words)
+            {
+                if (!_dictionary.WordFrequency.TryAdd(word, 1))
+                {
+                    _dictionary.WordFrequency[word]++;
+                }
+            }
+
+            _storageService.SavePredictionDictionary(_dictionary);
+        }
+        catch
+        {
+        }
     }
 }

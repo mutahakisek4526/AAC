@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 using AacV1.Models;
 
@@ -5,83 +6,80 @@ namespace AacV1.Services;
 
 public class StorageService : IStorageService
 {
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
-    private readonly string _baseDirectory;
+    private readonly string _basePath;
+    private readonly JsonSerializerOptions _options = new() { WriteIndented = true };
+    public string LastError { get; private set; } = string.Empty;
 
     public StorageService()
     {
-        _baseDirectory = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "AacV1");
-        EnsureDirectory();
+        _basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AacV1");
+        EnsureFolder();
     }
 
-    public AacAppSettings LoadSettings() => LoadFromFile("settings.json", new AacAppSettings());
+    public AacAppSettings LoadSettings() => Load("settings.json", new AacAppSettings());
+    public void SaveSettings(AacAppSettings appSettings) => Save("settings.json", appSettings);
+    public List<AacPhraseItem> LoadPhrases() => Load("phrases.json", GetDefaultPhrases());
+    public void SavePhrases(List<AacPhraseItem> items) => Save("phrases.json", items);
+    public List<AacHistoryItem> LoadHistory() => Load("history.json", new List<AacHistoryItem>());
+    public void SaveHistory(List<AacHistoryItem> items) => Save("history.json", items.Take(200).ToList());
+    public AacPredictionDictionary LoadPredictionDictionary() => Load("predictions.json", new AacPredictionDictionary());
+    public void SavePredictionDictionary(AacPredictionDictionary dictionary) => Save("predictions.json", dictionary);
 
-    public void SaveSettings(AacAppSettings appSettings) => SaveToFile("settings.json", appSettings);
-
-    public List<AacPhraseItem> LoadPhrases() => LoadFromFile("phrases.json", new List<AacPhraseItem>());
-
-    public void SavePhrases(List<AacPhraseItem> phraseItems) => SaveToFile("phrases.json", phraseItems);
-
-    public List<AacHistoryItem> LoadHistory() => LoadFromFile("history.json", new List<AacHistoryItem>());
-
-    public void SaveHistory(List<AacHistoryItem> historyItems) => SaveToFile("history.json", historyItems);
-
-    public Dictionary<string, List<string>> LoadPredictionDictionary() =>
-        LoadFromFile("predictions.json", new Dictionary<string, List<string>>());
-
-    public void SavePredictionDictionary(Dictionary<string, List<string>> predictionDictionary) =>
-        SaveToFile("predictions.json", predictionDictionary);
-
-    public List<AacEnvironmentAction> LoadEnvironmentActions() =>
-        LoadFromFile("environment_actions.json", new List<AacEnvironmentAction>());
-
-    public void SaveEnvironmentActions(List<AacEnvironmentAction> actions) =>
-        SaveToFile("environment_actions.json", actions);
-
-    private T LoadFromFile<T>(string fileName, T fallback)
+    private T Load<T>(string fileName, T fallback)
     {
         try
         {
-            var targetPath = System.IO.Path.Combine(_baseDirectory, fileName);
-            if (!System.IO.File.Exists(targetPath))
+            EnsureFolder();
+            var path = Path.Combine(_basePath, fileName);
+            if (!File.Exists(path))
             {
                 return fallback;
             }
 
-            var jsonText = System.IO.File.ReadAllText(targetPath);
-            var data = JsonSerializer.Deserialize<T>(jsonText, _jsonSerializerOptions);
-            return data ?? fallback;
+            var json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<T>(json, _options) ?? fallback;
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
             return fallback;
         }
     }
 
-    private void SaveToFile<T>(string fileName, T data)
+    private void Save<T>(string fileName, T value)
     {
         try
         {
-            EnsureDirectory();
-            var targetPath = System.IO.Path.Combine(_baseDirectory, fileName);
-            var jsonText = JsonSerializer.Serialize(data, _jsonSerializerOptions);
-            System.IO.File.WriteAllText(targetPath, jsonText);
+            EnsureFolder();
+            var path = Path.Combine(_basePath, fileName);
+            File.WriteAllText(path, JsonSerializer.Serialize(value, _options));
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
         }
     }
 
-    private void EnsureDirectory()
+    private void EnsureFolder()
     {
         try
         {
-            System.IO.Directory.CreateDirectory(_baseDirectory);
+            Directory.CreateDirectory(_basePath);
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.Message;
         }
+    }
+
+    private static List<AacPhraseItem> GetDefaultPhrases()
+    {
+        return new List<AacPhraseItem>
+        {
+            new() { Category = "日常", Text = "ありがとうございます" },
+            new() { Category = "日常", Text = "おはようございます" },
+            new() { Category = "介助", Text = "水をください" },
+            new() { Category = "介助", Text = "体位を変えてください" }
+        };
     }
 }
